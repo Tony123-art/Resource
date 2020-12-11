@@ -1,0 +1,88 @@
+const int VRyPin = A1;
+const int VRxPin = A0;
+const int VRyPin2 = A2;
+const int VRxPin2 = A3;
+
+const int SWPin  = 5;
+const int SWPin2  = 6;
+
+int VRx = 0;        // value read from the horizontal pot
+int VRy = 0;        // value read from the vertical pot
+int SW = 0;         // value read from the switch
+
+int VRx2 = 0;
+int VRy2 = 0;
+int SW2 = 0;
+void setup() {
+  Serial.begin(9600);
+  pinMode(SWPin,INPUT_PULLUP);
+  pinMode(SWPin2,INPUT_PULLUP);
+}
+
+void loop() {
+const int VRyPin = A1;
+const int VRxPin = A0;
+const int VRyPin2 = A2;
+const int VRxPin2 = A3;
+
+const int SWPin  = 5;
+const int SWPin2  = 6;
+
+int VRx = 0;        // value read from the horizontal pot
+int VRy = 0;        // value read from the vertical pot
+int SW = 0;         // value read from the switch
+
+int VRx2 = 0;
+int VRy2 = 0;
+int SW2 = 0;
+void setup() {
+  Serial.begin(9600);
+  pinMode(SWPin,INPUT_PULLUP);
+  pinMode(SWPin2,INPUT_PULLUP);
+}
+
+void loop() {
+
+  VRx = analogRead(VRxPin);
+  VRy = analogRead(VRyPin);
+  VRx2 = analogRead(VRxPin2);
+  VRy2 = analogRead(VRyPin2);
+  SW = digitalRead(SWPin);
+  SW2 = digitalRead(SWPin2);
+
+  // print the results to the Serial Monitor:
+  
+  if (VRx==0){
+    Serial.println("shift ");
+    }
+    else if(VRx > 700){
+      Serial.println("space ");
+     }
+     else if(VRy > 700){
+      Serial.println("q ");
+     }
+     else if(VRy == 0){
+      Serial.println("e ");
+     }
+     else if(VRx2 > 700){
+      Serial.println("down ");
+     }
+     else if(VRy2 > 700){
+      Serial.println("left ");
+     }
+     else if(VRy2 == 0){
+      Serial.println("right ");
+     }
+     else if(VRx2 == 0){
+      Serial.println("up ");
+     }
+     else if(SW == 0){
+      Serial.println("rc ");
+     }
+     else if (SW2 == 0){
+      Serial.println("lc ");
+      }
+     else{
+      Serial.println("None ");
+      }
+}

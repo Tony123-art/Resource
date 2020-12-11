@@ -1,0 +1,166 @@
+import os
+# from __future__ import print_function
+import sys
+import cv2
+import pyautogui
+from random import randint
+
+trackerTypes = ['BOOSTING', 'MIL', 'KCF','TLD', 'MEDIANFLOW', 'GOTURN', 'MOSSE', 'MOSSE']
+path = "p"
+Image = []
+Classnames = []
+list = os.listdir(path)
+print(len(list))
+
+for cl in list:
+    imgcur = cv2.imread(f'{path}/{cl}',0)
+    Image.append(imgcur)
+    Classnames.append(os.path.splitext(cl)[0])
+print(Classnames)
+
+def findes(images):
+    orb = cv2.ORB_create(nfeatures=1000)
+    desList = []
+    for img in images:
+        kp,des = orb.detectAndCompute(img,None)
+        desList.append(des)
+    return desList
+desList = findes(Image)
+print(len(desList))
+
+def findID(img,deslist):
+    orb = cv2.ORB_create(nfeatures=1000)
+    kp2,des2 = orb.detectAndCompute(img,None)
+    bf = cv2.BFMatcher()
+    matchList = []
+    finalval = -1
+    try:
+        for des in desList:
+            matches = bf.knnMatch(des,des2,k=2)
+            good = []
+            for m,n in matches:
+                if m.distance < 0.70*n.distance:
+                    good.append([m])
+            matchList.append(len(good))
+    except:
+        pass
+    thres = 0.2
+    if len(matchList)!=0:
+        if max(matchList) > thres:
+            finalval = matchList.index(max(matchList))
+    return finalval        
+
+def write(words):
+    cv2.putText(frame,words,(10,10),cv2.FONT_HERSHEY_SIMPLEX,1,(255,0,0),2,cv2.LINE_AA)
+
+def createTrackerByName(trackerType):
+  # Create a tracker based on tracker name
+  if trackerType == trackerTypes[0]:
+    tracker = cv2.TrackerBoosting_create()
+
+  elif trackerType == trackerTypes[1]:
+    tracker = cv2.TrackerMIL_create()
+
+  elif trackerType == trackerTypes[2]:
+    tracker = cv2.TrackerKCF_create()
+
+  elif trackerType == trackerTypes[3]:
+    tracker = cv2.TrackerTLD_create()
+
+  elif trackerType == trackerTypes[4]:
+    tracker = cv2.TrackerMedianFlow_create()
+
+  elif trackerType == trackerTypes[5]:
+    tracker = cv2.TrackerGOTURN_create()
+
+  elif trackerType == trackerTypes[6]:
+    tracker = cv2.TrackerMOSSE_create()
+
+  elif trackerType == trackerTypes[7]:
+    tracker = cv2.TrackerMOSSE_create()
+
+  else:
+    tracker = None
+    print('Incorrect tracker name')
+    print('Available trackers are:')
+
+    for t in trackerTypes:
+        print(t)
+
+     
+
+  return tracker
+# r"C:\Users\VILASH\Videos\Student Anthem.mp4"
+cap = cv2.VideoCapture("p\\try.mp4")
+success, frame = cap.read()
+
+
+if not success:
+
+  print('Failed to read video')
+
+  sys.exit(1)
+## Select boxes
+bboxes = []
+colors = [] 
+
+# OpenCV's selectROI function doesn't work for selecting multiple objects in Python
+# So we will call this function in a loop till we are done selecting all objects
+while True:
+
+  # draw bounding boxes over objects
+  # selectROI's default behaviour is to draw box starting from the center
+  # when fromCenter is set to false, you can draw box starting from top left corner
+  bbox = cv2.selectROI('MultiTracker', frame)
+  bboxes.append(bbox)
+  colors.append((randint(0, 255), randint(0, 255), randint(0, 255)))
+  print("Press q to quit selecting boxes and start tracking")
+  print("Press any other key to select next object")
+  k = cv2.waitKey(0) & 0xFF
+  if (k == 113):
+    # x = input("Name : ")
+    pass
+  # q is pressed
+    break
+
+print('Selected bounding boxes {}'.format(bboxes))
+# Specify the tracker type
+trackerType = "MOSSE"    
+
+# Create MultiTracker object
+multiTracker = cv2.MultiTracker_create()
+
+# Initialize MultiTracker 
+for bbox in bboxes:
+  multiTracker.add(createTrackerByName(trackerType), frame, bbox)
+# Process video and track objects
+while cap.isOpened():
+  success, frame = cap.read()
+  if not success:
+    break
+  
+  # get updated location of objects in subsequent frames
+  success, boxes = multiTracker.update(frame)
+
+  # draw tracked objects
+  for i, newbox in enumerate(boxes):
+    x = (int(newbox[0]))
+    y = (int(newbox[1]))
+    w = (int(newbox[2]))
+    h = (int(newbox[3]))
+    C = frame[y:y+h,x:x+h]
+    cv2.imshow("C",C)
+    id = findID(C,desList)
+    print(id)
+    try:
+        if id != -1:
+            cv2.putText(C,Classnames[id],(50,50),cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),1)
+    except:
+        pass
+
+
+  # show frame
+  cv2.imshow('MultiTracker', frame)
+  # quit on ESC button
+  if cv2.waitKey(1) & 0xFF == 27:  # Esc pressed
+    break

@@ -1,0 +1,66 @@
+import pyautogui as pg
+import cv2
+import numpy as np
+import os
+
+path = "p"
+Image = []
+Classnames = []
+list = os.listdir(path)
+print(len(list))
+
+for cl in list:
+    imgcur = cv2.imread(f'{path}/{cl}',0)
+    Image.append(imgcur)
+    Classnames.append(os.path.splitext(cl)[0])
+print(Classnames)
+
+def findes(images):
+    orb = cv2.ORB_create(nfeatures=1000)
+    desList = []
+    for img in images:
+        kp,des = orb.detectAndCompute(img,None)
+        desList.append(des)
+    return desList
+desList = findes(Image)
+print(len(desList))
+
+def findID(img,deslist):
+    orb = cv2.ORB_create(nfeatures=1000)
+    kp2,des2 = orb.detectAndCompute(img,None)
+    bf = cv2.BFMatcher()
+    matchList = []
+    finalval = -1
+    try:
+        for des in desList:
+            matches = bf.knnMatch(des,des2,k=2)
+            good = []
+            for m,n in matches:
+                if m.distance < 0.70*n.distance:
+                    good.append([m])
+            matchList.append(len(good))
+    except:
+        pass
+    thres = 0.2
+    if len(matchList)!=0:
+        if max(matchList) > thres:
+            finalval = matchList.index(max(matchList))
+    return finalval        
+
+cap = cv2.VideoCapture(0)
+while True:
+
+    success, img2 = cap.read()
+    imgOriginal = img2.copy()
+    im2 = cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
+
+    id = findID(img2,desList)
+    print(id)
+    try:
+        if id != -1:
+            cv2.putText(imgOriginal,Classnames[id],(50,50),cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),1)
+    except:
+        pass
+
+    cv2.imshow('img2',imgOriginal)
+    cv2.waitKey(1)

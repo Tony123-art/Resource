@@ -1,0 +1,59 @@
+
+import cv2
+import numpy as np
+
+cap = cv2.VideoCapture(0)
+
+imgTarget = cv2.imread("p\\p.jpg")
+
+video = cv2.VideoCapture("p\\white2.avi")
+
+orb = cv2.ORB_create(nfeatures=1000)
+kp1, des1 = orb.detectAndCompute(imgTarget, None)
+hT, wT, cT = imgTarget.shape
+while True:
+    ret,frame = video.read()
+    wt,ht,ct = frame.shape
+    frame = cv2.resize(frame,(hT,wT))
+
+    u_white = np.array([255,255,255]) 
+    l_white = np.array([230,230,230])
+    mask2 = cv2.inRange(frame,l_white,u_white)
+    res = cv2.bitwise_and(frame,frame,mask=mask2)
+    res2 = cv2.bitwise_not(res)
+    f2 = frame - res
+    print(f2.shape)
+
+    success, imgWebcam = cap.read()
+    print(imgWebcam.shape)
+    imgAug = imgWebcam.copy()
+    kp2, des2 = orb.detectAndCompute(imgWebcam, None)
+    hT, wT, cT = imgTarget.shape
+    imgWebcam2 = cv2.resize(imgWebcam,(640,480))
+
+
+    bf = cv2.BFMatcher()
+    matches = bf.knnMatch(des1, des2, k=2)
+    good = []
+    for m, n in matches:
+        if m.distance < 0.75 * n.distance:
+            good.append(m)
+    print(len(good))
+    imgFeatures = cv2.drawMatches(imgTarget, kp1, imgWebcam, kp2, good, None, flags=2)
+    if len(good)>15:
+        src_pts = np.float32([ kp1[m.queryIdx].pt for m in good]).reshape(-1,1,2)
+        dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good]).reshape(-1,1,2)
+        matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+        pts = np.float32([ [0,0],[0,hT],[wT,hT],[wT,0] ]).reshape(-1,1,2)
+        dst = cv2.perspectiveTransform(pts,matrix)
+        pts = np.float32([ [0,0],[0,hT],[wT,hT],[wT,0] ]).reshape(-1,1,2)
+        dst = cv2.perspectiveTransform(pts,matrix)
+        img2 = cv2.polylines(imgWebcam,[np.int32(dst)],True,(255,0,255),3, cv2.LINE_AA) # draw polylines
+
+        f = cv2.resize(f2,(hT,wT))
+        imgWarp = cv2.warpPerspective(f, matrix, (img2.shape[1], img2.shape[0]))
+        f = np.where(imgWarp==0 ,imgWebcam2,imgWarp)
+
+        cv2.imshow("res2",f)
+        
+        cv2.waitKey(1)

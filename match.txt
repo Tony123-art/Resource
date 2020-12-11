@@ -1,0 +1,52 @@
+import cv2
+import pytesseract
+import time
+import os
+pytesseract.pytesseract.tesseract_cmd = r"D:\Tesseract-OCR\tesseract.exe"
+
+def write(words,x,y):
+    cv2.putText(frames,words,(x,y),cv2.FONT_HERSHEY_SIMPLEX,1,(255,0,0),1,cv2.LINE_AA)
+a = """
+
+"""
+i=0
+t=0
+time = []
+cap = cv2.VideoCapture("p\\mount.avi")  
+while True:
+    t+=1  
+    ret, frames = cap.read() 
+    
+    text = pytesseract.image_to_string(frames)
+    i += 1
+    ti = f"scene{i}"
+    print("Secne",ti)
+    
+    ti = text
+    v = len(time)
+    time.append(ti)
+    # a = v-1
+    # if ti != a:
+    tex = v-1
+    if v ==0 :
+        write(ti,10,40)
+        print("First frame ")
+    else:
+        if ti == time[v-1]:
+            ti.replace(a,"<empty>")
+            print("matching")
+            write(ti,10,40)
+            pass
+        else:
+            ti.replace(a,"<empty>")
+            write(ti,20,40)
+            if a in ti:
+                print(ti)
+            pass
+
+    
+    cv2.imshow('video2', frames)
+    if cv2.waitKey(33) == 27: 
+        break
+   
+cv2.destroyAllWindows()
