@@ -1,0 +1,32 @@
+import cv2
+import numpy as np
+circles = np.zeros((4,2),np.int)
+couter = 0
+
+img = cv2.imread(r"C:\Users\VILASH\Documents\Bluetooth\wp1841020.jpg")
+img = cv2.resize(img,(640,480))
+def mousepoints(event,x,y,flags,params):
+    global couter
+    if event == cv2.EVENT_LBUTTONDOWN:
+        circles[couter] = x,y
+        couter = couter + 1
+        print(circles)
+
+while True:
+    if couter == 4:
+        width ,height = 250,350
+        pts1 = np.float32([circles[0],circles[1],circles[2],circles[3]])
+        a = circles[0]
+        b = circles[1]
+        c = circles[2]
+        d = circles[3]
+        width = b[0]-a[0]
+        height = c[1]-a[1]
+        pts2 = np.float32([[0,0],[width,0],[0,height],[width,height]])
+
+        matrix = cv2.getPerspectiveTransform(pts1,pts2)
+        output = cv2.warpPerspective(img,matrix,(width,height))
+        cv2.imshow("imgo",output)
+    cv2.imshow("img",img)
+    cv2.setMouseCallback("img",mousepoints)
+    cv2.waitKey(1)
