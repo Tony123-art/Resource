@@ -2,4 +2,4 @@ git init
 git add .
 git status
 git commit -m "mes"
-ayushnilabh2
+password-ayushnilabh2
