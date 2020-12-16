@@ -1,0 +1,34 @@
+import cv2
+import math
+
+path = r"p\l1.jpg"
+img = cv2.imread(path)
+pointlist =[]
+def mousepoints(event,x,y,flags,params):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        cv2.circle(img,(x,y),5,(0,255,0),cv2.FILLED)
+        pointlist.append([x,y])
+        # print(pointlist)
+def gradient(pts1,pts2):
+    return ((pts2[1]-pts1[1])/(pts2[0]-pts1[0]))
+
+def getAngle(pointlist):
+    pts1,pts2,pts3 = pointlist[-3:]
+    m1 = gradient(pts1,pts2)
+    m2 = gradient(pts1,pts3)
+    x = (m2-m1)/(1+(m2*m1))
+    angr = math.atan(x)
+    angd = round(math.degrees(angr))
+    cv2.putText(img,f"Angle  = {angd}",(30,50),cv2.FONT_HERSHEY_TRIPLEX,2,(0,0,0),2)
+while True:
+
+     if len(pointlist) % 3 == 0 and len(pointlist) != 0:
+        getAngle(pointlist)
+     else:
+        pass
+
+     cv2.imshow("image",img)
+     cv2.setMouseCallback("image",mousepoints)
+     if cv2.waitKey(1) & 0xFF == ord('q'):
+         pointlist = []
+         img = cv2.imread(path)
